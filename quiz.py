@@ -257,10 +257,16 @@ class SQLQuiz(object):
 
         problem = self.current_problem
 
+        # This accumulates the SQL command they are making
+        sql = ""
+
         while True:
             try:
-                print
-                line = raw_input("SQL [%d]> " % problem.num)
+                if not sql:
+                    print
+                    line = raw_input("SQL [%d]> " % problem.num)
+                else:
+                    line = raw_input("... [%d]> " % problem.num)
             except EOFError:
                 return False
 
@@ -275,33 +281,41 @@ class SQLQuiz(object):
 
             elif command in ["problem", "p"]:
                 self.show_problem()
+                sql = ""
 
             elif command in ["hint"]:
                 print problem.hint
+                sql = ""
 
             elif command in ["tables", "table"]:
                 self.db.show_tables()
+                sql = ""
 
             elif command in ["schema"]:
                 self.db.show_schema(tokens)
+                sql = ""
 
             elif command in ["help", "h", "?"]:
                 print HELP
+                sql = ""
 
             elif command in ["next", "skip"]:
                 print "Skipping problem %d" % problem.num
                 return True
 
             else:
-                result = self.db.get_result(line)
-                if result:
-                    print result
-                    if problem.check_solution(result) is True:
-                        print "\n\tCorrect!"
-                        print "\t", line
-                        print "\tMoving on...\n"
-                        self.progress.mark_solved(problem.num, problem.task, line)
-                        return True
+                sql = sql + "\n" + line
+                if sql.strip().endswith(";"):
+                    result = self.db.get_result(sql)
+                    if result:
+                        print result
+                        if problem.check_solution(result) is True:
+                            print "\n\tCorrect!"
+                            print sql 
+                            print "\tMoving on...\n"
+                            self.progress.mark_solved(problem.num, problem.task, sql)
+                            return True
+                    sql = ""
 
 
 def write_pickle():
