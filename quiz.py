@@ -169,7 +169,10 @@ class Database(object):
             print "There was a problem with your SQL syntax:\n\n\t%s\n" % e
             return
 
-        return self._result_to_str(results)
+        if results:
+            return self._result_to_str(results)
+        else:
+            return "(your syntax was legal but your query returned no results)"
 
     def show_tables(self):
         """Show tables."""
